@@ -1,0 +1,77 @@
+[project]
+name = "witseal"
+version = "0.0.0"
+description = "WitSeal Python: witnessed execution runtime for AI agents"
+readme = "README.md"
+authors = [
+    { name = "WitSeal contributors", email = "noreply@witseal.com" }
+]
+license = "Apache-2.0"
+license-files = ["LICENSE"]
+requires-python = ">=3.11"
+keywords = ["witseal", "witnessed-execution", "trust-runtime", "evidence-chain", "agentic-trust"]
+classifiers = [
+    "Development Status :: 1 - Planning",
+    "Intended Audience :: Developers",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+]
+dependencies = [
+    "pydantic>=2.9",
+    "rfc8785>=0.1.4",
+    "cryptography>=42",
+]
+
+[project.urls]
+Homepage = "https://witseal.com"
+Repository = "https://github.com/WitSeal/witseal-py"
+"TypeScript reference" = "https://github.com/WitSeal/witseal"
+"Rust reference" = "https://github.com/WitSeal/witseal-rs"
+
+[project.scripts]
+witseal = "witseal.__main__:main"
+
+[build-system]
+requires = ["uv_build>=0.11.14,<0.12.0"]
+build-backend = "uv_build"
+
+[dependency-groups]
+dev = [
+    "pytest>=8.0",
+    "pytest-asyncio>=0.24",
+    "mypy>=1.13",
+    "ruff>=0.7",
+]
+# Conformance oracle: jcs is Anders Rundgren's reference implementation (RFC 8785
+# co-author). Used by tests/test_canonical_json_vectors.py to guard against future
+# rfc8785 regressions. Not a runtime dependency.
+canonicalize-oracle = [
+    "jcs>=0.2.1",
+]
+
+[tool.uv]
+package = true
+# Ensure the canonicalize-oracle group (jcs) is installed on default `uv sync` so
+# tests/test_canonical_json_vectors.py — the rfc8785-vs-jcs parity guard — can
+# run as part of the default CI gate.
+default-groups = ["dev", "canonicalize-oracle"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"
+
+[tool.mypy]
+strict = true
+python_version = "3.11"
+files = ["src/witseal"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "N", "ANN", "RUF"]

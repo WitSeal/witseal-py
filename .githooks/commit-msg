@@ -1,0 +1,29 @@
+#!/usr/bin/env bash
+# WitSeal commit-msg hook
+# Rejects commit messages containing deferred (locked) vocabulary.
+# Install: scripts/install-hooks.sh (sets local core.hooksPath to this directory).
+# This hook affects ONLY this repository.
+
+set -euo pipefail
+
+DEFERRED='execution truth layer|operational reality|trust substrate|provenance collapse|agent lineage|evidence continuity|operational provenance'
+
+MSG_FILE="${1:-}"
+if [[ -z "$MSG_FILE" || ! -f "$MSG_FILE" ]]; then
+    exit 0
+fi
+
+if grep -iE "$DEFERRED" "$MSG_FILE" > /dev/null; then
+    echo "" >&2
+    echo "commit-msg: REJECTED — deferred (locked) vocabulary in commit message:" >&2
+    echo "" >&2
+    grep -inE "$DEFERRED" "$MSG_FILE" >&2
+    echo "" >&2
+    echo "See WitSeal STYLE.md for the locked vocabulary set." >&2
+    echo "Rephrase using terms like: witnessed execution, evidence chain," >&2
+    echo "execution receipt, hash chain, witness event, policy decision," >&2
+    echo "authority boundary, risk classification, approval gate, trust runtime." >&2
+    exit 1
+fi
+
+exit 0
