@@ -1,11 +1,16 @@
-"""WitSeal Python: wire-format types and read-side verifier for the WitSeal runtime ecosystem.
+"""WitSeal Python — the Ecosystem SDK: consume, verify, and inspect WitSeal artifacts.
 
-Phase 1 scope is **verifier + schema only**: this package provides
+Per [redacted] the Python line is the **SDK / verifier** layer. It provides
 RFC 8785 canonicalization, SHA-256 hashing, Pydantic v2 wire-format
-schemas, and Ed25519 signature verification for v0.2 receipts. It does
-NOT provide subprocess mediation, policy evaluation, witness event-log
-append, approval flow, or `witseal exec`; those are future-phase work.
-Public API surface is not yet defined.
+schemas, Ed25519 receipt verification, witness-event hash-chain and
+evidence-package verification, a unified ``verify_artifact`` discriminator,
+and keyless ``inspect``.
+
+It does NOT generate artifacts or run a runtime: no signing/receipt
+generation, no subprocess mediation, no policy evaluation, no witness
+event-log append, no approval flow, no ``witseal exec``. Canonical
+generation is the Rust trust core ([redacted]). Public API surface is not yet
+frozen.
 """
 
 __version__ = "0.1.0"
