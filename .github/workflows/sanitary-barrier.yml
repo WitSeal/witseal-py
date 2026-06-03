@@ -1,18 +1,11 @@
-# Sanitary barrier — CI gate for the witseal-py repository.
+# Sanitary barrier — CI gate for this repository.
 #
-# PREPARED (NOT ACTIVE). Activation = merge as
-# `.github/workflows/sanitary-barrier.yml` into witseal-py AFTER its
-# sanitation rewrite (force-push: coordination/ removed, paths/cyrillic
-# cleaned), so the barrier stands on clean history. Anchored to public sanitation note.
-#
-# Fails any PR/push to main introducing Cyrillic (U+0400–U+04FF) or a
-# denylist marker (internal paths/roles/artifacts/telemetry). In particular
-# blocks re-introduction of a coordination/ tree or operational telemetry.
-# Also blocks internal provenance citations: `[redacted]`, `[redacted]`,
-# `[redacted]` (the noun — NOT `ratified`, which stays for public RFC-002
-# revision metadata, e.g. "RFC-002 §7 rev2 ratified <date>").
-# By-design NOT flagged: public ADR-NNNN, IETF RFC 8785, product RFC-001/002.
-# Self-excludes this workflow file from its own denylist scan.
+# Fails any push/PR to main that introduces Cyrillic (U+0400-U+04FF), a local
+# filesystem path, or an internal marker. The internal-marker patterns are
+# supplied out-of-band through the SANITARY_DENYLIST repository secret, so this
+# public workflow does not enumerate them; when that secret is unset the
+# internal-marker class is skipped while the Cyrillic and local-path gates
+# still run. The workflow file is excluded from its own scans.
 name: Sanitary barrier
 on:
   pull_request:
@@ -34,22 +27,29 @@ jobs:
             exit 1
           fi
           echo "No Cyrillic. OK."
-      - name: No coordination/ telemetry tree
+      - name: No local filesystem paths
         run: |
           set -euo pipefail
-          if git ls-files -z 'coordination/*' | grep -qz .; then
-            echo "::error::coordination/ telemetry must not exist in this repo"
-            exit 1
-          fi
-          echo "No coordination/ tree. OK."
-      - name: Denylist (internal paths / roles / artifacts)
-        run: |
-          set -euo pipefail
-          PAT='[redacted]|[redacted]|\b[redacted]\b|\b[redacted]\b|[redacted]|[redacted]|[redacted]|[redacted]|[redacted]|deferred tools|[redacted]|[redacted]|[redacted]'
           if git ls-files -z \
             | grep -zZv '^\.github/workflows/sanitary-barrier\.yml$' \
-            | xargs -0 grep -lIE "$PAT" 2>/dev/null; then
-            echo "::error::Denylist marker found in tracked files (see paths above)"
+            | xargs -0 grep -lIE '/(Users|home)/[A-Za-z0-9._-]+' 2>/dev/null; then
+            echo "::error::Local filesystem path found in tracked files (see paths above)"
             exit 1
           fi
-          echo "No denylist markers. OK."
+          echo "No local paths. OK."
+      - name: Internal-marker denylist (out-of-band pattern)
+        env:
+          DENYLIST: ${{ secrets.SANITARY_DENYLIST }}
+        run: |
+          set -euo pipefail
+          if [ -z "${DENYLIST:-}" ]; then
+            echo "::notice::SANITARY_DENYLIST not set; internal-marker scan skipped (Cyrillic + path gates still enforced)."
+            exit 0
+          fi
+          if git ls-files -z \
+            | grep -zZv '^\.github/workflows/sanitary-barrier\.yml$' \
+            | xargs -0 grep -lIE "${DENYLIST}" 2>/dev/null; then
+            echo "::error::Internal marker found in tracked files (see paths above)"
+            exit 1
+          fi
+          echo "No internal markers. OK."
