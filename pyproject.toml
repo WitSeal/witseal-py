@@ -1,7 +1,7 @@
 [project]
 name = "witseal"
-version = "0.0.0"
-description = "WitSeal Python: witnessed execution runtime for AI agents"
+version = "0.1.0"
+description = "WitSeal Python SDK: consume, verify, and inspect witnessed-execution evidence (receipts and evidence packages)"
 readme = "README.md"
 authors = [
     { name = "WitSeal contributors", email = "noreply@witseal.com" }
@@ -9,9 +9,9 @@ authors = [
 license = "Apache-2.0"
 license-files = ["LICENSE"]
 requires-python = ">=3.11"
-keywords = ["witseal", "witnessed-execution", "trust-runtime", "evidence-chain", "agentic-trust"]
+keywords = ["witseal", "witnessed-execution", "evidence-chain", "execution-receipt", "verifier", "sdk", "agentic-trust"]
 classifiers = [
-    "Development Status :: 1 - Planning",
+    "Development Status :: 3 - Alpha",
     "Intended Audience :: Developers",
     "Operating System :: OS Independent",
     "Programming Language :: Python :: 3",
@@ -19,6 +19,9 @@ classifiers = [
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
     "Programming Language :: Python :: 3.14",
+    "Topic :: Security",
+    "Topic :: Software Development :: Libraries",
+    "Typing :: Typed",
 ]
 dependencies = [
     "pydantic>=2.9",
@@ -29,6 +32,8 @@ dependencies = [
 [project.urls]
 Homepage = "https://witseal.com"
 Repository = "https://github.com/WitSeal/witseal-py"
+"Bug Tracker" = "https://github.com/WitSeal/witseal-py/issues"
+Changelog = "https://github.com/WitSeal/witseal-py/blob/main/CHANGELOG.md"
 "TypeScript reference" = "https://github.com/WitSeal/witseal"
 "Rust reference" = "https://github.com/WitSeal/witseal-rs"
 
@@ -43,6 +48,7 @@ build-backend = "uv_build"
 dev = [
     "pytest>=8.0",
     "pytest-asyncio>=0.24",
+    "pytest-cov>=5.0",
     "mypy>=1.13",
     "ruff>=0.7",
 ]

@@ -1,0 +1,118 @@
+name: Release
+
+# Builds, signs, and publishes a GitHub release on a version tag.
+# It does NOT publish to PyPI — distribution publication is a separate,
+# explicitly authorized step.
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+  id-token: write
+
+jobs:
+  build:
+    name: Build & test
+    runs-on: ubuntu-latest
+    outputs:
+      digests: ${{ steps.digests.outputs.digests }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          python-version: "3.13"
+          enable-cache: true
+      - name: Sync dependencies
+        run: uv sync
+      - name: Test
+        run: uv run pytest -q
+      - name: Build wheel + sdist
+        run: uv build
+      - name: Generate SBOM (CycloneDX)
+        run: |
+          set -euo pipefail
+          uvx cyclonedx-py environment > dist/witseal.cdx.json || \
+            uvx --from cyclonedx-bom cyclonedx-py environment > dist/witseal.cdx.json
+      - name: Checksums
+        id: digests
+        run: |
+          set -euo pipefail
+          cd dist
+          shasum -a 256 * > SHA256SUMS
+          echo "digests=$(base64 -w0 SHA256SUMS 2>/dev/null || base64 SHA256SUMS | tr -d '\n')" >> "$GITHUB_OUTPUT"
+      - name: Upload build
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist/
+          retention-days: 7
+
+  sign:
+    name: Sigstore sign
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - name: Download build
+        uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist/
+      - name: Install Cosign
+        uses: sigstore/cosign-installer@v3
+      - name: Sign artifacts (keyless)
+        run: |
+          set -euo pipefail
+          cd dist
+          for f in *.whl *.tar.gz *.cdx.json SHA256SUMS; do
+            [ -e "$f" ] || continue
+            cosign sign-blob --yes --output-signature "$f.sig" --output-certificate "$f.crt" "$f"
+          done
+      - name: Upload signed
+        uses: actions/upload-artifact@v4
+        with:
+          name: signed
+          path: dist/
+          retention-days: 7
+
+  publish-release:
+    name: Publish GitHub release
+    needs: [build, sign]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Download signed
+        uses: actions/download-artifact@v4
+        with:
+          name: signed
+          path: dist/
+      - name: Create GitHub release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            dist/*.whl
+            dist/*.tar.gz
+            dist/*.cdx.json
+            dist/*.sig
+            dist/*.crt
+            dist/SHA256SUMS
+          generate_release_notes: true
+          body: |
+            Artifacts are signed with Sigstore (Cosign keyless). Verify a file with:
+
+            ```
+            cosign verify-blob \
+              --certificate <file>.crt \
+              --signature <file>.sig \
+              --certificate-identity "https://github.com/WitSeal/witseal-py/.github/workflows/release.yml@refs/tags/${{ github.ref_name }}" \
+              --certificate-oidc-issuer "https://token.actions.githubusercontent.com" \
+              <file>
+            ```
+
+            This release is not published to PyPI by this workflow.

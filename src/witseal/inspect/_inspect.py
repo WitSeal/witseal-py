@@ -15,7 +15,7 @@ key for those. Inspection never fails closed on a bad artifact: it returns a
 structured report (including ``kind='unknown'`` for unrecognized input) so a
 consumer can see what it received.
 
-Read-side only. Python does not generate artifacts ([redacted]).
+Read-side only. Python does not generate artifacts.
 """
 
 from __future__ import annotations

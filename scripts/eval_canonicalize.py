@@ -44,7 +44,7 @@ CASES: list[tuple[str, Any]] = [
 ]
 
 
-def ts_reference(value: Any) -> str:
+def ts_reference(value: Any) -> str:  # noqa: ANN401
     js = (
         "import {canonicalize} from './src/integrity/hash-chain.ts';"
         "const v = JSON.parse(process.argv[1]);"
@@ -62,14 +62,14 @@ def ts_reference(value: Any) -> str:
     return result.stdout
 
 
-def py_rfc8785(value: Any) -> str:
+def py_rfc8785(value: Any) -> str:  # noqa: ANN401
     try:
         return rfc8785.dumps(value).decode("utf-8")
     except Exception as e:
         return f"<rfc8785 error: {e}>"
 
 
-def py_jcs(value: Any) -> str:
+def py_jcs(value: Any) -> str:  # noqa: ANN401
     try:
         return jcs.canonicalize(value).decode("utf-8")
     except Exception as e:
@@ -89,7 +89,14 @@ def main() -> int:
             ts_failures += 1
         rfc_match = rfc == ts
         jcs_match = jc == ts
-        both = "both" if rfc_match and jcs_match else ("rfc8785" if rfc_match else ("jcs" if jcs_match else "NONE"))
+        if rfc_match and jcs_match:
+            both = "both"
+        elif rfc_match:
+            both = "rfc8785"
+        elif jcs_match:
+            both = "jcs"
+        else:
+            both = "NONE"
         if not (rfc_match and jcs_match):
             all_match = False
         print(f"{name:<28} {ts[:30]!r:<32} {rfc[:30]!r:<32} {jc[:30]!r:<32} {both:<10}")

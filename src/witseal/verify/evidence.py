@@ -23,7 +23,7 @@ exactly as the TS layer does — this verifier parses the envelope with the
 receipts array emptied and then discriminates the real receipts per element.
 
 Python never builds an evidence package at runtime (generation is the Rust
-track per [redacted]); this is the consume/verify path only.
+track); this is the consume/verify path only.
 """
 
 from __future__ import annotations

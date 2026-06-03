@@ -1,15 +1,14 @@
 # WitSeal Python
 
 Native Python **Ecosystem SDK** for WitSeal: the read-side path that
-consumes, verifies, and inspects WitSeal artifacts (receipts and evidence
-packages). Per [redacted] the Python line is the SDK layer — it does not
-generate artifacts and is not a runtime; canonical generation is the Rust
-trust core.
+consumes, verifies, and inspects WitSeal artifacts (execution receipts and
+evidence packages). The Python line is the SDK layer — it does not generate
+artifacts and is not a runtime; canonical generation is the Rust trust core.
 
 ## Status
 
-**Pre-release.** Public API is not yet frozen.
-Namespace reserved on PyPI as `witseal` v0.0.0.
+**Pre-release (0.1.0).** Public API is not yet frozen.
+**Not yet published to PyPI** — install from source (see below).
 
 ## What this package does today
 
@@ -39,21 +38,36 @@ Namespace reserved on PyPI as `witseal` v0.0.0.
 - **Verifier / SDK CLI** — `verify receipt|evidence|artifact` and
   `inspect` (see below).
 
-## What this package does NOT do ([redacted] boundary)
+## What this package does NOT do
 
 The Python line is the **SDK / verifier** layer — consume, verify,
 integrate. It deliberately does **not** provide:
 
 - **Artifact generation** — no receipt/event/evidence generation, no
-  signing. Canonical generation is the Rust trust core ([redacted]).
+  signing. Canonical generation is the Rust trust core.
 - **Runtime** — no `witseal exec`, no subprocess mediation, no policy
   engine / runtime policy evaluation, no witness event-log append or
   exclusive-lock acquisition, no approval-flow execution, no file
   mediation / rollback.
 
-These are not Python deliverables. A full Python runtime (variant D) is
-closed as off-architecture; Python↔Rust bindings (variant E) are deferred
-to 0.3.0+.
+These are not Python deliverables. A full Python runtime is out of scope by
+design; native Python↔Rust bindings are planned for a later release.
+
+## Install
+
+Not yet published to PyPI. Install from source:
+
+```bash
+# with uv
+uv pip install git+https://github.com/WitSeal/witseal-py
+
+# or from a clone
+git clone https://github.com/WitSeal/witseal-py
+cd witseal-py
+uv sync
+```
+
+Requires Python 3.11+.
 
 ## CLI
 
@@ -84,17 +98,29 @@ required `--public-key`).
 
 - Native integration helpers for LangChain, LangGraph, OpenAI Agents SDK,
   CrewAI, AutoGen, and MCP servers (consume/verify side)
-- Python↔Rust bindings to the Rust trust core (variant E, 0.3.0+)
+- Native Python↔Rust bindings to the Rust trust core (later release)
 
 This package does **not** wrap the TypeScript or Rust binaries. It is a
-native Python implementation per [redacted].
+native Python implementation.
+
+## Contributing
+
+Contributions are welcome. See [CONTRIBUTING.md](CONTRIBUTING.md) for the
+workflow, development setup, and the tests/lint/type-check commands, and
+[STYLE.md](STYLE.md) for the vocabulary discipline. All changes keep the
+cross-track golden receipt byte-identical.
+
+## Security
+
+See [SECURITY.md](SECURITY.md) for how to report a vulnerability and how
+releases are verified. Do not file public issues for security reports.
 
 ## References
 
 - TypeScript reference implementation: <https://github.com/WitSeal/witseal>
 - Rust parallel implementation: <https://github.com/WitSeal/witseal-rs>
-- Wire-format specification: forthcoming `pai-receipt-spec` repository (Q3 2026)
+- Changelog: [CHANGELOG.md](CHANGELOG.md)
 
 ## License
 
-Apache 2.0. See LICENSE.
+Apache 2.0. See [LICENSE](LICENSE).

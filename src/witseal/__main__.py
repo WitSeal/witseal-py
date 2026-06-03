@@ -1,9 +1,9 @@
-"""Verifier / SDK CLI for the Python track ([redacted] role B: consume/verify).
+"""Verifier / SDK CLI for the Python track (SDK role: consume / verify).
 
 Scope is intentionally narrow: schema + read-side verification + keyless
 inspection. No runtime execution, subprocess mediation, policy evaluation,
 artifact generation, or implicit public-key discovery — generation is the
-Rust track ([redacted]).
+Rust track.
 
 Commands:
 

@@ -2,7 +2,7 @@
 
 Schema version: `witseal.witness.v0.1`.
 
-Hashing rule (per ADR-0001 / RFC 8785):
+Hashing rule (per RFC 8785):
   1. Take this object with `event_hash` field omitted
   2. Canonicalize via JCS (RFC 8785)
   3. SHA-256 the canonical bytes

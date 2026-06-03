@@ -3,8 +3,8 @@
 Constructs internally-consistent witness events, v0.1 / v0.2 receipts, and
 evidence packages so the read-side verifier can be exercised end to end.
 These build *test* artifacts in Python only to drive the consume/verify path;
-they are not a runtime generator (Python does not generate at runtime per
-[redacted] — this is test scaffolding).
+they are not a runtime generator (Python does not generate at runtime —
+this is test scaffolding).
 """
 
 from __future__ import annotations

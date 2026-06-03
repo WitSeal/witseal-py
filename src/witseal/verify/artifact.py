@@ -14,7 +14,7 @@ decides what the artifact is, and runs the right verification:
   Requires a public key only if it contains a v0.2 receipt.
 
 Anything else is classified ``unknown`` and rejected. Read-side only; the
-Python SDK does not generate artifacts ([redacted]: generation is the Rust track).
+Python SDK does not generate artifacts (generation is the Rust track).
 """
 
 from __future__ import annotations

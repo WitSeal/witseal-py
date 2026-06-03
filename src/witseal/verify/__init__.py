@@ -1,4 +1,4 @@
-"""Verifier surface — the SDK read-side verification path ([redacted] role B).
+"""Verifier surface — the SDK read-side verification path.
 
 Library-level, key-aware verification:
 
@@ -20,7 +20,7 @@ The package CLI exposes ``witseal verify {receipt,evidence,artifact}`` and
 ``witseal inspect`` (keyless, in :mod:`witseal.inspect`).
 
 Python is the ecosystem SDK: it consumes and verifies artifacts, it does not
-generate them at runtime (generation is the Rust track per [redacted]).
+generate them at runtime (generation is the Rust track).
 """
 
 from witseal.verify.artifact import ArtifactVerifyResult, verify_artifact

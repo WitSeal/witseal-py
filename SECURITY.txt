@@ -1,0 +1,5 @@
+Contact: https://github.com/WitSeal/witseal-py/security/advisories/new
+Expires: 2027-06-03T00:00:00Z
+Preferred-Languages: en
+Canonical: https://github.com/WitSeal/witseal-py/blob/main/SECURITY.txt
+Policy: https://github.com/WitSeal/witseal-py/blob/main/SECURITY.md

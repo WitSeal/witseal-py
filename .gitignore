@@ -17,6 +17,14 @@ venv/
 .coverage
 htmlcov/
 
+# Release / signing artifacts (produced by the release workflow)
+*.sig
+*.crt
+*.intoto.jsonl
+*.cdx.json
+SHA256SUMS
+!tests/fixtures/**/*.sig
+
 # IDE
 .idea/
 .vscode/
