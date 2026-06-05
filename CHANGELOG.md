@@ -10,6 +10,17 @@ may introduce breaking changes; patch releases will not.
 
 ## [Unreleased]
 
+### Added
+- CI dependency audit job (`pip-audit`) with a weekly scheduled canary run.
+- Version-consistency gate (`scripts/check_version_consistency.py`):
+  `pyproject.toml` is the single source of truth; CI and the release workflow
+  fail on drift between it, the installed metadata, the changelog section, and
+  the release tag.
+
+### Changed
+- `witseal.__version__` is now derived from the installed distribution metadata
+  instead of a hard-coded literal (which had drifted to `0.0.0`).
+
 ## [0.1.0] - unreleased
 
 > First public SDK release of the Python line: the read-side path that
