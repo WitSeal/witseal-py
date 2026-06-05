@@ -10,17 +10,6 @@ may introduce breaking changes; patch releases will not.
 
 ## [Unreleased]
 
-### Added
-- CI dependency audit job (`pip-audit`) with a weekly scheduled canary run.
-- Version-consistency gate (`scripts/check_version_consistency.py`):
-  `pyproject.toml` is the single source of truth; CI and the release workflow
-  fail on drift between it, the installed metadata, the changelog section, and
-  the release tag.
-
-### Changed
-- `witseal.__version__` is now derived from the installed distribution metadata
-  instead of a hard-coded literal (which had drifted to `0.0.0`).
-
 ## [0.1.0] - unreleased
 
 > First public SDK release of the Python line: the read-side path that
@@ -45,9 +34,13 @@ may introduce breaking changes; patch releases will not.
   companion events.
 - Unified `verify_artifact` discriminator and keyless `inspect`.
 - CLI: `witseal verify {receipt,evidence,artifact}` and `witseal inspect`.
-- Project scaffolding: CI (pytest matrix, ruff, mypy, wheel build), release
-  workflow, SECURITY, CONTRIBUTING, STYLE, CODE_OF_CONDUCT, issue/PR
-  templates, Dependabot, and a sanitary-barrier CI gate.
+- `witseal.__version__` is read from the installed distribution metadata, so
+  it cannot drift from the packaged version.
+- Project scaffolding: CI (pytest matrix, ruff, mypy, wheel build, `pip-audit`
+  dependency audit, version-consistency gate), a tag-driven release workflow
+  with Sigstore keyless signing and OIDC trusted publishing to PyPI, SECURITY,
+  CONTRIBUTING, STYLE, CODE_OF_CONDUCT, RELEASING, issue/PR templates,
+  Dependabot, and a sanitary-barrier CI gate.
 
 ### Security
 
