@@ -58,15 +58,28 @@ class ReceiptV02(BaseModel):
 
     Carries the v0.1 chain/decision fields plus 7 the wire-format spec fields:
     `artifact_digest`, `artifact_type`, `build_id`, `git_commit`,
-    `attestation_digest`, `signature`, `prev_hash`. All mandatory in the
-    the strict sense — every field is *present* in the wire bytes (`extra=forbid`
-    forbids unknown fields; the schema declaration forbids absence). Two
-    fields carry `null` semantically — `execution_result_hash` is `null`
-    when no result hash is recorded; `prev_hash` is `null` at chain
-    genesis (the genesis prev_hash rule (Option B),
-    aligned with the `receipt_id` nullable-mandatory precedent RFC-001
-    v0.2 § 7.1 Path B). "No skip-empty" addresses field absence, not
+    `attestation_digest`, `signature`, `prev_hash`. All 17 canon fields are
+    mandatory in the strict sense — every field is *present* in the wire
+    bytes (the schema declaration forbids absence; a wrong-typed field is
+    still rejected). Two fields carry `null` semantically —
+    `execution_result_hash` is `null` when no result hash is recorded;
+    `prev_hash` is `null` at chain genesis (the genesis prev_hash rule
+    (Option B), aligned with the `receipt_id` nullable-mandatory precedent
+    RFC-001 v0.2 § 7.1 Path B). "No skip-empty" addresses field absence, not
     field value — null-valued fields are still emitted on the wire.
+
+    Forward-compatibility: `extra="allow"`. Unknown top-level
+    *additive* fields (not in the 17-field canon) are PRESERVED on the model
+    rather than dropped, so the S1 pre-image rebuilt by the verifier
+    (`witseal.integrity.signing.compute_signing_bytes`, via
+    `model_dump(by_alias=True)`) carries them and matches what the signer
+    signed over ALL fields. RFC 8785 / JCS sorts the unknown keys in
+    lexicographically with the rest. This is a verifier-side relaxation
+    scoped STRICTLY to unknown additive fields: it does NOT loosen required-
+    field presence, type checks, frozen value sets, or the `receipt_id` /
+    `witness_event_id` pattern checks — a receipt missing a required field or
+    carrying a wrong-typed canon field is still INVALID. The canon (the 17
+    fields), the schema version, and the golden vector are unchanged.
 
     `signature` covers the canonical JSON of this body (the S1 pre-image)
     with `signature` cleared to the empty-string sentinel `""` AND
@@ -80,7 +93,11 @@ class ReceiptV02(BaseModel):
     encoding only.
     """
 
-    model_config = ConfigDict(extra="forbid")
+    # Forward-compatibility: preserve unknown additive fields so the
+    # rebuilt S1 pre-image matches a signature computed over ALL fields. See
+    # the class docstring. Strictness for the 17 canon fields is unchanged
+    # (required presence + types are still enforced by pydantic).
+    model_config = ConfigDict(extra="allow")
 
     schema_version: Literal["witseal.receipt.v0.2"]
     receipt_id: str

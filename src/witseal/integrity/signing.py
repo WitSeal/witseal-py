@@ -68,9 +68,25 @@ def compute_signing_bytes(receipt: ReceiptV02) -> bytes:
     never absent (the no-skip-empty rule addresses field absence, not
     field value).
 
+    Forward-compatibility: unknown top-level *additive* fields
+    carried on the receipt (``ReceiptV02`` uses ``extra="allow"``) are
+    INCLUDED in the pre-image. This is what lets a receipt signed over ALL
+    its fields — including a field outside the 17-field canon — verify VALID:
+    the pre-image the verifier rebuilds is the received mapping, not a
+    canon-only reconstruction that dropped the unknowns. ``model_extra`` is
+    merged explicitly so the dependence on unknown fields is robust to
+    pydantic ``model_dump`` defaults. RFC 8785 / JCS sorts the unknown keys
+    in lexicographically with the rest, so key order is irrelevant.
+
     Canonicalization is RFC 8785 / JCS.
     """
     body = receipt.model_dump(by_alias=True)
+    # Explicitly carry unknown additive fields (extra="allow") into the
+    # pre-image. pydantic's model_dump already includes model_extra, but
+    # merging defensively keeps the forward-compat contract independent of
+    # serialization defaults.
+    if receipt.model_extra:
+        body.update(receipt.model_extra)
     body["receipt_hash"] = RECEIPT_HASH_PLACEHOLDER
     body["signature"] = SIGNATURE_PLACEHOLDER
     return canonicalize(body)

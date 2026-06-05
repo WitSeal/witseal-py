@@ -10,11 +10,17 @@ T10): the public key is supplied by the caller.
 The procedure (cross-track canon — golden-receipt ``inputs.json``
 ``_construction_procedure`` steps 3/4/6):
 
-1. Accept a parsed :class:`~witseal.schemas.receipt.ReceiptV02` (17
-   fields, including ``artifact_type`` and ``build_id``).
-2. Rebuild the S1 pre-image: clear ``signature`` -> ``""`` and
-   ``receipt_hash`` -> 64 zeros, canonicalize per RFC 8785
-   (:func:`witseal.integrity.signing.compute_signing_bytes`).
+1. Accept a parsed :class:`~witseal.schemas.receipt.ReceiptV02` (the 17
+   canon fields, including ``artifact_type`` and ``build_id``; plus any
+   unknown top-level *additive* fields preserved for forward-compatibility
+   forward-compatibility — ``ReceiptV02`` uses ``extra="allow"``).
+2. Rebuild the S1 pre-image FROM THE RECEIVED MAPPING (including unknown
+   additive fields): clear ``signature`` -> ``""`` and ``receipt_hash`` ->
+   64 zeros, canonicalize per RFC 8785
+   (:func:`witseal.integrity.signing.compute_signing_bytes`). A receipt
+   signed over ALL its fields — even one outside the canon — therefore
+   verifies VALID; the canon, schema version, and golden vector are
+   unchanged.
 3. Check ``receipt_hash == SHA-256(pre-image)`` and
    ``ed25519_verify(public_key, pre-image, signature)``.
 4. Return a :class:`~witseal.verify.result.VerificationResult` — VALID
