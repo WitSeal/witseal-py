@@ -44,7 +44,7 @@ jobs:
           shasum -a 256 * > SHA256SUMS
           echo "digests=$(base64 -w0 SHA256SUMS 2>/dev/null || base64 SHA256SUMS | tr -d '\n')" >> "$GITHUB_OUTPUT"
       - name: Upload build
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: dist
           path: dist/
@@ -74,7 +74,7 @@ jobs:
             cosign sign-blob --yes --output-signature "$f.sig" --output-certificate "$f.crt" "$f"
           done
       - name: Upload signed
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: signed
           path: dist/
