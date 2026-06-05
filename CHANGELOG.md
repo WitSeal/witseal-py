@@ -10,7 +10,7 @@ may introduce breaking changes; patch releases will not.
 
 ## [Unreleased]
 
-## [0.1.0] - unreleased
+## [0.1.0] - 2026-06-05
 
 > First public SDK release of the Python line: the read-side path that
 > consumes, verifies, and inspects WitSeal artifacts. Canonical generation
