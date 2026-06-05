@@ -1,8 +1,9 @@
 name: Release
 
-# Builds, signs, and publishes a GitHub release on a version tag.
-# It does NOT publish to PyPI — distribution publication is a separate,
-# explicitly authorized step.
+# Builds and signs artifacts on a version tag, publishes a GitHub release,
+# and publishes to PyPI via OIDC trusted publishing. The PyPI step runs in
+# the `pypi` deployment environment (manual approval required), so
+# distribution publication stays an explicitly authorized step.
 
 on:
   push:
@@ -27,6 +28,10 @@ jobs:
           enable-cache: true
       - name: Sync dependencies
         run: uv sync
+      - name: Version consistency (tag == pyproject == changelog)
+        env:
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: uv run python scripts/check_version_consistency.py
       - name: Test
         run: uv run pytest -q
       - name: Build wheel + sdist
@@ -115,4 +120,34 @@ jobs:
               <file>
             ```
 
-            This release is not published to PyPI by this workflow.
+            Distribution to PyPI is handled by the gated publish-pypi job (OIDC trusted publishing).
+
+  publish-pypi:
+    name: Publish to PyPI (OIDC trusted publishing)
+    needs: [build, sign]
+    runs-on: ubuntu-latest
+    # Deployment environment gate: configure `pypi` with a required reviewer so
+    # the first (and every) PyPI publish needs explicit manual approval.
+    environment:
+      name: pypi
+      url: https://pypi.org/p/witseal
+    permissions:
+      id-token: write
+    steps:
+      - name: Download build
+        uses: actions/download-artifact@v8
+        with:
+          name: dist
+          path: dist/
+      - name: Keep only distributable artifacts
+        run: |
+          set -euo pipefail
+          cd dist
+          # PyPI accepts only the wheel and sdist; drop SBOM and checksums.
+          find . -maxdepth 1 -type f ! -name '*.whl' ! -name '*.tar.gz' -delete
+          ls -l
+      - name: Publish to PyPI
+        # No API token: authenticates via OIDC against the PyPI trusted
+        # publisher configured for WitSeal/witseal-py (release.yml, env pypi).
+        # Generates and uploads PEP 740 attestations (id-token: write).
+        uses: pypa/gh-action-pypi-publish@release/v1
