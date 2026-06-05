@@ -13,5 +13,15 @@ generation is the Rust trust core. Public API surface is not yet
 frozen.
 """
 
-__version__ = "0.1.0"
+from importlib.metadata import PackageNotFoundError
+from importlib.metadata import version as _version
+
+try:
+    # Single source of truth: the version declared in pyproject.toml, surfaced
+    # through the installed distribution metadata, so __version__ can never
+    # drift from the packaged version.
+    __version__ = _version("witseal")
+except PackageNotFoundError:  # pragma: no cover - source tree without an install
+    __version__ = "0.1.0"
+
 __all__ = ["__version__"]
