@@ -55,19 +55,26 @@ design; native Python↔Rust bindings are planned for a later release.
 
 ## Install
 
-Not yet published to PyPI. Install from source:
+```bash
+# from PyPI
+pip install witseal
+
+# isolated CLI (recommended for the `witseal` command)
+pipx install witseal
+
+# or with uv
+uv pip install witseal
+```
+
+Requires Python 3.11+.
+
+From source (development):
 
 ```bash
-# with uv
-uv pip install git+https://github.com/WitSeal/witseal-py
-
-# or from a clone
 git clone https://github.com/WitSeal/witseal-py
 cd witseal-py
 uv sync
 ```
-
-Requires Python 3.11+.
 
 ## CLI
 
