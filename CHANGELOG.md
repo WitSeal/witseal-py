@@ -30,6 +30,15 @@ may introduce breaking changes; patch releases will not.
   hex, PEM bytes, or a loaded key). The CLI's key handling now reuses it, so
   the CLI and the library resolve keys identically.
 
+### Fixed
+
+- Ship the PEP 561 `py.typed` marker inside the `witseal` package. The
+  distribution already declared the `Typing :: Typed` classifier, but the
+  marker file was absent, so downstream type checkers (such as mypy) treated
+  the package as untyped and could not see its annotations. The marker is now
+  packaged in both the wheel and the source distribution, so the SDK's type
+  annotations reach consumers.
+
 ## [0.1.1] - 2026-06-07
 
 ### Changed
