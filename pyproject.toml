@@ -29,6 +29,15 @@ dependencies = [
     "cryptography>=42",
 ]
 
+[project.optional-dependencies]
+# Optional MCP protocol surface (witseal.integrations.mcp). The base package
+# stays minimal: the verify-only core (verify_witseal_artifact) needs nothing
+# beyond the runtime deps above; only the MCP *tool/server* surface needs the
+# SDK, so it lives behind this extra. Install with `pip install witseal[mcp]`.
+mcp = [
+    "mcp>=1.0",
+]
+
 [project.urls]
 Homepage = "https://witseal.com"
 Repository = "https://github.com/WitSeal/witseal-py"
@@ -51,6 +60,10 @@ dev = [
     "pytest-cov>=5.0",
     "mypy>=1.13",
     "ruff>=0.7",
+    # Installed in dev/CI so the tests under tests/integrations/ exercise the
+    # MCP protocol surface (the `mcp` extra). It is NOT a runtime dependency —
+    # the verify-only core works without it (see [project.optional-dependencies]).
+    "mcp>=1.0",
 ]
 # Conformance oracle: jcs is Anders Rundgren's reference implementation (RFC 8785
 # co-author). Used by tests/test_canonical_json_vectors.py to guard against future
@@ -74,6 +87,15 @@ asyncio_mode = "auto"
 strict = true
 python_version = "3.11"
 files = ["src/witseal"]
+
+# The `mcp` SDK is an OPTIONAL extra (witseal.integrations.mcp imports it
+# lazily / under TYPE_CHECKING only). When it is installed — as it is in CI's
+# dev group — mypy uses its real, py.typed types and checks our usage fully.
+# This override only keeps the type gate from hard-failing on a base-only
+# checkout where the extra is absent; it does not relax checking of our code.
+[[tool.mypy.overrides]]
+module = ["mcp.*"]
+ignore_missing_imports = true
 
 [tool.ruff]
 line-length = 100

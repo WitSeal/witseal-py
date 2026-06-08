@@ -21,6 +21,8 @@ errors, not signature-level errors, and the caller maps them to
 from __future__ import annotations
 
 import base64
+import os
+from pathlib import Path
 
 from cryptography.exceptions import InvalidSignature
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PublicKey
@@ -30,6 +32,11 @@ from witseal.integrity.signing import compute_signing_bytes
 from witseal.schemas.receipt import ReceiptV02
 
 _SIGNATURE_ALGORITHM_V02: str = "ed25519"
+
+# The externally-supplied verifier key, in any of the forms a caller already
+# has on hand. NOT a network handle / key id: resolution is purely local
+# (D5 T10 — no bundled keys, no env-var fallback, no network fetch).
+PublicKeyInput = Ed25519PublicKey | str | bytes | os.PathLike[str]
 
 
 def load_public_key_pem(pem_bytes: bytes) -> Ed25519PublicKey:
@@ -41,6 +48,62 @@ def load_public_key_pem(pem_bytes: bytes) -> Ed25519PublicKey:
     if not isinstance(key, Ed25519PublicKey):
         raise ValueError(f"expected Ed25519 public key, got {type(key).__name__}")
     return key
+
+
+def _load_public_key_hex(value: str) -> Ed25519PublicKey:
+    """Load an Ed25519 public key from a 32-byte raw hex string.
+
+    Accepts an optional ``0x`` / ``0X`` prefix. Raises ``ValueError`` if the
+    string is not hex or does not decode to exactly 32 bytes.
+    """
+    normalized = value.strip()
+    if normalized.startswith(("0x", "0X")):
+        normalized = normalized[2:]
+
+    try:
+        raw = bytes.fromhex(normalized)
+    except ValueError as exc:
+        raise ValueError(
+            "public key must be an existing PEM path or 32-byte Ed25519 public key hex"
+        ) from exc
+
+    if len(raw) != 32:
+        raise ValueError("public key hex must decode to exactly 32 bytes")
+
+    return Ed25519PublicKey.from_public_bytes(raw)
+
+
+def resolve_public_key(value: PublicKeyInput) -> Ed25519PublicKey:
+    """Resolve a caller-supplied public key in any of its on-hand forms.
+
+    Accepts:
+
+    - an already-loaded :class:`Ed25519PublicKey` (returned unchanged);
+    - a filesystem path (``str`` / :class:`os.PathLike`) to a PEM file —
+      read and loaded via :func:`load_public_key_pem`;
+    - a 32-byte raw Ed25519 public key as a hex ``str`` (optional ``0x``
+      prefix);
+    - PEM ``bytes`` (a ``-----BEGIN PUBLIC KEY-----`` block).
+
+    A ``str`` that names an existing file is read as PEM; otherwise it is
+    parsed as hex. Resolution is purely local — no network fetch, no
+    environment-variable fallback, no bundled key (D5 T10): the key is
+    always an explicit verifier input.
+
+    Raises ``ValueError`` for an unparseable key and ``OSError`` for an
+    unreadable PEM path.
+    """
+    if isinstance(value, Ed25519PublicKey):
+        return value
+    if isinstance(value, bytes):
+        return load_public_key_pem(value)
+    if isinstance(value, os.PathLike):
+        return load_public_key_pem(Path(value).expanduser().read_bytes())
+    # ``str``: an existing file is a PEM path; anything else is raw hex.
+    path = Path(value).expanduser()
+    if path.is_file():
+        return load_public_key_pem(path.read_bytes())
+    return _load_public_key_hex(value)
 
 
 def _split_signature_value(signature_value: str) -> bytes:

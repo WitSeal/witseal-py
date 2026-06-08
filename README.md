@@ -64,6 +64,9 @@ pipx install witseal
 
 # or with uv
 uv pip install witseal
+
+# with the optional MCP protocol surface (witseal.integrations.mcp tool/server)
+pip install "witseal[mcp]"
 ```
 
 Requires Python 3.11+.
@@ -101,10 +104,59 @@ Exit codes: `0` VALID, `1` INVALID (JSON diagnostics on stdout), `2`
 input/usage error (unreadable file, malformed artifact or key, missing
 required `--public-key`).
 
+## Integrations
+
+Framework integration helpers live under `witseal.integrations`. Each is a
+thin **consume / verify** seam: hand it a WitSeal artifact and it returns a
+VALID / INVALID verdict using the same verification path as the CLI. An
+integration here verifies only the artifact handed to it — it does not
+generate artifacts and does not observe, intercept, or record the host
+framework's activity.
+
+> **Provisional (pre-1.0).** The `witseal.integrations` namespace and these
+> signatures are not yet frozen.
+
+### MCP — `witseal.integrations.mcp`
+
+Verify a receipt or evidence package presented over the
+[Model Context Protocol](https://modelcontextprotocol.io). The core verifier
+needs only the base package; the optional MCP tool/server surface needs the
+`mcp` extra (`pip install "witseal[mcp]"`).
+
+```python
+from witseal.integrations.mcp import verify_witseal_artifact
+
+# Accepts a parsed dict, or raw JSON as str / bytes. public_key (a PEM path,
+# 32-byte hex, PEM bytes, or a loaded key) is required only for a v0.2 receipt.
+verdict = verify_witseal_artifact(artifact, public_key="ed25519-public.pem")
+# -> {"valid": True, "kind": "receipt.v0.2",
+#     "schema_version": "witseal.receipt.v0.2", "reason": None}
+```
+
+Expose the verifier as an MCP tool (`witseal.verify_artifact`) on a server —
+requires the `mcp` extra:
+
+```python
+from witseal.integrations.mcp import build_mcp_server, register_witseal_tools
+
+# A standalone server with only the verify-only tool:
+server = build_mcp_server(public_key="ed25519-public.pem")
+server.run()  # e.g. transport="stdio"
+
+# …or add the tool to an existing FastMCP server:
+register_witseal_tools(existing_server, public_key="ed25519-public.pem")
+```
+
+The public key is always an explicit input — no environment, config, bundled,
+or network key discovery. See
+[`src/witseal/integrations/README.md`](src/witseal/integrations/README.md)
+for details.
+
 ## Forward plan (not yet implemented)
 
 - Native integration helpers for LangChain, LangGraph, OpenAI Agents SDK,
-  CrewAI, AutoGen, and MCP servers (consume/verify side)
+  CrewAI, and AutoGen (consume/verify side). MCP shipped (provisional) —
+  see [Integrations](#integrations).
 - Native Python↔Rust bindings to the Rust trust core (later release)
 
 This package does **not** wrap the TypeScript or Rust binaries. It is a

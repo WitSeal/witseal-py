@@ -15,6 +15,9 @@ Library-level, key-aware verification:
 - :func:`verify_receipt_signature` — signature-only check (returns ``bool``).
 - :func:`load_public_key_pem` — load the externally-supplied Ed25519
   public key from PEM bytes.
+- :func:`resolve_public_key` — resolve the externally-supplied Ed25519
+  public key from any on-hand form (PEM path, 32-byte hex, PEM bytes, or an
+  already-loaded key).
 
 The package CLI exposes ``witseal verify {receipt,evidence,artifact}`` and
 ``witseal inspect`` (keyless, in :mod:`witseal.inspect`).
@@ -25,7 +28,12 @@ generate them at runtime (generation is the Rust track).
 
 from witseal.verify.artifact import ArtifactVerifyResult, verify_artifact
 from witseal.verify.chain import ChainVerifyResult, verify_chain, verify_event_hash
-from witseal.verify.ed25519 import load_public_key_pem, verify_receipt_signature
+from witseal.verify.ed25519 import (
+    PublicKeyInput,
+    load_public_key_pem,
+    resolve_public_key,
+    verify_receipt_signature,
+)
 from witseal.verify.evidence import (
     EvidenceVerifyResult,
     ReceiptSubResult,
@@ -38,9 +46,11 @@ __all__ = [
     "ArtifactVerifyResult",
     "ChainVerifyResult",
     "EvidenceVerifyResult",
+    "PublicKeyInput",
     "ReceiptSubResult",
     "VerificationResult",
     "load_public_key_pem",
+    "resolve_public_key",
     "verify_artifact",
     "verify_chain",
     "verify_event_hash",
