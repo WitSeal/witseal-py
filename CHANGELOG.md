@@ -10,6 +10,26 @@ may introduce breaking changes; patch releases will not.
 
 ## [Unreleased]
 
+### Added
+
+- **`witseal.integrations.mcp`** — the first framework integration: a
+  consume/verify seam for the Model Context Protocol.
+  `verify_witseal_artifact(artifact, *, public_key=None)` accepts a receipt
+  or evidence package as a mapping or raw JSON and returns a VALID / INVALID
+  verdict via the existing `verify_artifact` path (pure consumer of the
+  frozen wire format). An optional MCP tool/server surface
+  (`build_mcp_server`, `register_witseal_tools`) exposes the verifier as the
+  `witseal.verify_artifact` MCP tool; the `mcp` SDK is imported lazily, so
+  importing the module without the new `mcp` extra still works. Provisional,
+  pre-1.0: the `witseal.integrations` namespace is not yet frozen.
+- **`mcp` optional-dependency extra** (`pip install "witseal[mcp]"`) for the
+  MCP protocol surface. The base package stays minimal — the verify-only core
+  needs no new runtime dependency.
+- **`witseal.verify.resolve_public_key`** — public helper that resolves the
+  externally-supplied Ed25519 key from any on-hand form (PEM path, 32-byte
+  hex, PEM bytes, or a loaded key). The CLI's key handling now reuses it, so
+  the CLI and the library resolve keys identically.
+
 ## [0.1.1] - 2026-06-07
 
 ### Changed

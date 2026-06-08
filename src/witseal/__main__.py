@@ -30,7 +30,7 @@ from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PublicKey
 from witseal.inspect import inspect_artifact
 from witseal.schemas.receipt import ReceiptV02
 from witseal.verify import (
-    load_public_key_pem,
+    resolve_public_key,
     verify_artifact,
     verify_evidence_package,
     verify_receipt,
@@ -111,29 +111,11 @@ def _load_json_mapping(path: Path) -> Mapping[str, Any]:
     return value
 
 
-def _load_public_key_hex(value: str) -> Ed25519PublicKey:
-    normalized = value.strip()
-    if normalized.startswith(("0x", "0X")):
-        normalized = normalized[2:]
-
-    try:
-        raw = bytes.fromhex(normalized)
-    except ValueError as exc:
-        raise ValueError(
-            "public key must be an existing PEM path or 32-byte Ed25519 public key hex"
-        ) from exc
-
-    if len(raw) != 32:
-        raise ValueError("public key hex must decode to exactly 32 bytes")
-
-    return Ed25519PublicKey.from_public_bytes(raw)
-
-
 def _load_public_key(value: str) -> Ed25519PublicKey:
-    path = Path(value).expanduser()
-    if path.is_file():
-        return load_public_key_pem(path.read_bytes())
-    return _load_public_key_hex(value)
+    # The CLI accepts a PEM path or a 32-byte hex string; both are handled by
+    # the shared resolver (witseal.verify.resolve_public_key), which the
+    # integrations layer reuses so CLI and library resolve keys identically.
+    return resolve_public_key(value)
 
 
 def _emit(payload: dict[str, Any]) -> None:
