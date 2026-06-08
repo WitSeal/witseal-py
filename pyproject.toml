@@ -1,6 +1,6 @@
 [project]
 name = "witseal"
-version = "0.1.0"
+version = "0.1.1"
 description = "WitSeal Python SDK: consume, verify, and inspect witnessed-execution evidence (receipts and evidence packages)"
 readme = "README.md"
 authors = [
@@ -38,7 +38,7 @@ Changelog = "https://github.com/WitSeal/witseal-py/blob/main/CHANGELOG.md"
 "Rust reference" = "https://github.com/WitSeal/witseal-rs"
 
 [project.scripts]
-witseal = "witseal.__main__:main"
+witseal-py = "witseal.__main__:main"
 
 [build-system]
 requires = ["uv_build>=0.11.14,<0.12.0"]
