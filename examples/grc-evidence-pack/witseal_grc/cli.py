@@ -22,7 +22,7 @@ import json
 import sys
 from collections.abc import Sequence
 from pathlib import Path
-from typing import Any, cast
+from typing import Any
 
 from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PublicKey
 
@@ -45,9 +45,7 @@ def _input_error(message: str) -> int:
 def _load_public_key(value: str) -> Ed25519PublicKey:
     path = Path(value).expanduser()
     if path.is_file():
-        # cast: the installed `witseal` ships no py.typed marker yet, so its
-        # return type reads as Any here (see the py.typed gap noted in the demo).
-        return cast(Ed25519PublicKey, load_public_key_pem(path.read_bytes()))
+        return load_public_key_pem(path.read_bytes())
     normalized = value.strip()
     if normalized.startswith(("0x", "0X")):
         normalized = normalized[2:]
