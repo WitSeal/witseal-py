@@ -10,6 +10,15 @@ may introduce breaking changes; patch releases will not.
 
 ## [Unreleased]
 
+## [0.1.1] - 2026-06-07
+
+### Changed
+
+- **CLI command renamed `witseal` → `witseal-py`** to avoid a name collision with
+  the npm `@witseal/cli` `witseal` command (the canonical WitSeal runtime CLI).
+  The module invocation `python -m witseal` and the package name
+  (`pip install witseal`) are unchanged.
+
 ## [0.1.0] - 2026-06-05
 
 > First public SDK release of the Python line: the read-side path that

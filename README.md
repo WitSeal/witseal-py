@@ -59,7 +59,7 @@ design; native Python↔Rust bindings are planned for a later release.
 # from PyPI
 pip install witseal
 
-# isolated CLI (recommended for the `witseal` command)
+# isolated CLI (recommended for the `witseal-py` command)
 pipx install witseal
 
 # or with uv
