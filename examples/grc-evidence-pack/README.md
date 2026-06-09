@@ -61,6 +61,10 @@ control set.
 | `drata` | Custom Connection record | native JSON |
 | `vanta` | document upload | pack `.zip` |
 
+A live **Drata** send posts the JSON record to the Custom Connection; a live
+**Vanta** send uploads the pack as `multipart/form-data` (the `file` part) to
+an existing document.
+
 Export is **dry-run by default**: it builds and prints the exact request
 (with the API key redacted) and sends nothing. A live send is opt-in
 (`--no-dry-run --api-key …` against a real tenant) and operator-run — no

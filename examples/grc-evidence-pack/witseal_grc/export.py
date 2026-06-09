@@ -19,6 +19,7 @@ import urllib.request
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
+from uuid import uuid4
 
 from .pack import _read_pack_files
 
@@ -144,6 +145,42 @@ def _redacted_headers(headers: dict[str, str]) -> dict[str, str]:
     return redacted
 
 
+def encode_multipart(
+    file_path: Path,
+    *,
+    field_name: str = "file",
+    filename: str | None = None,
+    part_content_type: str = "application/zip",
+    boundary: str | None = None,
+) -> tuple[bytes, str]:
+    """Encode a single-file ``multipart/form-data`` body.
+
+    Returns ``(body, content_type_header)``; the header carries the boundary.
+    This is the wire shape Vanta's document-upload endpoint expects: the
+    document must already exist, and the pack is sent as the ``file`` part.
+    Pass a fixed *boundary* for reproducible output (e.g. in tests).
+    """
+    bound = boundary or uuid4().hex
+    name = filename or file_path.name
+    payload = file_path.read_bytes()
+    crlf = b"\r\n"
+    body = crlf.join(
+        [
+            f"--{bound}".encode(),
+            (
+                f'Content-Disposition: form-data; name="{field_name}"; '
+                f'filename="{name}"'
+            ).encode(),
+            f"Content-Type: {part_content_type}".encode(),
+            b"",
+            payload,
+            f"--{bound}--".encode(),
+            b"",
+        ]
+    )
+    return body, f"multipart/form-data; boundary={bound}"
+
+
 def _send(request: ExportRequest) -> int:
     if request.body_kind == "json":
         data = json.dumps(request.json_body).encode("utf-8")
@@ -154,13 +191,10 @@ def _send(request: ExportRequest) -> int:
         file_path = request.file_path
         if file_path is None:
             raise ValueError("file export has no file_path")
-        # A real Vanta upload is multipart/form-data; this best-effort live path
-        # sends the zip bytes. Adapt to the documented multipart field for a real
-        # tenant. The supported demo path is dry-run.
-        data = file_path.read_bytes()
-        headers = {**request.headers, "Content-Type": "application/zip"}
+        body, content_type = encode_multipart(file_path)
+        headers = {**request.headers, "Content-Type": content_type}
         req = urllib.request.Request(
-            request.url, data=data, method=request.method, headers=headers
+            request.url, data=body, method=request.method, headers=headers
         )
     with urllib.request.urlopen(req) as response:
         return int(response.status)
@@ -186,6 +220,7 @@ def perform_export(request: ExportRequest, *, dry_run: bool = True) -> dict[str,
         summary["file_bytes"] = (
             file_path.stat().st_size if file_path and file_path.is_file() else None
         )
+        summary["multipart_field"] = "file"
 
     if dry_run or not has_auth:
         summary["sent"] = False
