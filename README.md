@@ -15,13 +15,13 @@ artifacts and is not a runtime; canonical generation is the Rust trust core.
 - **Wire-format schemas** — Pydantic v2 models for witness events,
   execution receipts (v0.1 + v0.2), evidence packages, intents, policy
   packs, and approvals. Byte-identical canonical serialization (RFC 8785
-  / JCS) with the TypeScript and Rust implementations — proven against the
+  / JCS) with the TypeScript and Rust implementations — checked against the
   three-track golden receipt (`8fc29592…`, 1050 bytes).
 - **Integrity primitives** — RFC 8785 canonicalization, SHA-256 hashing,
   receipt signing-bytes assembly per the v0.2 S1 64-zero `receipt_hash`
   placeholder rule, and the witness-event `event_hash` rule
   (`SHA-256(canonicalize(event without event_hash))`).
-- **Receipt verification** — independent v0.2 receipt verification:
+- **Receipt verification** — offline v0.2 receipt verification:
   recompute `receipt_hash` over the S1 pre-image and verify the Ed25519
   signature (RFC-002 §6 `ed25519:` algorithm-prefixed form) under a
   caller-supplied public key.
@@ -29,6 +29,13 @@ artifacts and is not a runtime; canonical generation is the Rust trust core.
   chain (linkage, self-hashes, sequence monotonicity) and verify a full
   evidence package: chain + `chain_head_after_range` match + per-receipt
   integrity cross-checked against each companion event.
+- **Known limitation (schema drift).** The models follow the original v0.1
+  outcome set. Evidence packages from `@witseal/cli` that contain later
+  outcomes (`pending`, `execution_lost`, `witnessed_executed`,
+  `no_policy_configured`, …) or the `intent_recorded_event_id` field — which
+  includes packages from the CLI's default two-phase `exec` flow — fail schema
+  validation and are reported INVALID with a `schema validation failed`
+  reason. That verdict reflects the model mismatch, not tampering.
 - **Unified verification** — `verify_artifact` discriminates on
   `schema_version` and routes to the right verifier (v0.1 receipt, v0.2
   receipt, or evidence package).

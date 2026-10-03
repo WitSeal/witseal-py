@@ -10,7 +10,7 @@ more.
 
 What an integration here IS:
 
-- a verifier seam — accept an artifact, return whether it is genuine.
+- a verifier seam — accept an artifact, return whether it verifies.
 
 What an integration here is explicitly NOT:
 

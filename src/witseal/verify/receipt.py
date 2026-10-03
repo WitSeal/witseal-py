@@ -1,4 +1,4 @@
-"""Independent verification of a v0.2 receipt.
+"""Offline verification of a v0.2 receipt.
 
 This is the verifier the Python track exposes to *independently* check a
 v0.2 ``receipt`` produced by another track (Rust signer / TS pipeline):
@@ -46,7 +46,7 @@ from witseal.verify.result import VerificationResult
 def verify_receipt(
     receipt: ReceiptV02, public_key: Ed25519PublicKey
 ) -> VerificationResult:
-    """Independently verify a v0.2 *receipt* under *public_key*.
+    """Verify a v0.2 *receipt* offline under *public_key*.
 
     Returns a :class:`VerificationResult` whose ``valid`` is ``True`` iff
     the recomputed ``receipt_hash`` matches the stored value AND the

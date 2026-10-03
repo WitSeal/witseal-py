@@ -5,7 +5,7 @@ Library-level, key-aware verification:
 - :func:`verify_artifact` — unified, version-discriminating entry point:
   given a parsed JSON mapping it routes to the right verifier (v0.1 receipt,
   v0.2 receipt, or evidence package) and returns one VALID / INVALID verdict.
-- :func:`verify_receipt` — independent check of a v0.2 receipt: recompute
+- :func:`verify_receipt` — offline check of a v0.2 receipt: recompute
   ``receipt_hash`` over the S1 pre-image AND verify the Ed25519 signature,
   with an externally-supplied public key.
 - :func:`verify_evidence_package` — chain verification + per-receipt

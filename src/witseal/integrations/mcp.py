@@ -155,7 +155,9 @@ def register_witseal_tools(
     ) -> dict[str, Any]:
         """Verify a WitSeal execution receipt or evidence package.
 
-        Returns whether the supplied artifact is genuine. ``artifact`` is the
+        Returns whether the supplied artifact verifies (hash consistency, and
+        for v0.2 the signature under the given key) -- not whether its contents
+        are true. ``artifact`` is the
         receipt/package as a JSON object or JSON string. ``public_key_pem_or_hex``
         is the Ed25519 verifier key (PEM text or 32-byte hex); it is required
         only for a v0.2 receipt and overrides any server default. This tool

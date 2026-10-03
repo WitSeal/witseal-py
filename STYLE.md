@@ -6,6 +6,9 @@ issue/PR text, release notes.
 WitSeal creates a category, and categories are created in language. Where a
 generic or competitor term is used in place of a canonical one, the category
 dilutes. This document is enforced by review and by a vocabulary check in CI.
+Claims made with these terms stay within the WitSeal claim boundary
+(`docs/CLAIM_BOUNDARY.md` in the core repository); its `STYLE.md` Section 11
+lists the preferred and prohibited formulations.
 
 ## Canonical terms (Use / Avoid)
 
