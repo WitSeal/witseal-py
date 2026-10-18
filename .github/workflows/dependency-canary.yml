@@ -1,0 +1,89 @@
+name: Dependency canary
+
+on:
+  schedule:
+    - cron: "47 6 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  UV_PYTHON: "3.13"
+
+jobs:
+  latest-compatible:
+    name: Latest allowed dependencies (Python 3.13)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v7
+        with:
+          version: "0.11.14"
+          python-version: "3.13"
+          enable-cache: false
+      - name: Record source and resolver
+        run: |
+          mkdir -p canary-evidence
+          git rev-parse HEAD > canary-evidence/source-commit.txt
+          uv --version > canary-evidence/uv-version.txt
+          sha256sum uv.lock > canary-evidence/committed-lock.sha256
+      - name: Resolve newer allowed versions in this checkout only
+        run: |
+          uv lock --upgrade
+          cp uv.lock canary-evidence/uv.lock
+          git diff -- uv.lock > canary-evidence/uv-lock.diff
+      - name: Install the selected graph
+        id: sync
+        run: uv sync --locked --group dev --group canonicalize-oracle --extra mcp
+      - name: Record resolved graph and installed versions
+        run: |
+          uv run --locked python - <<'PY'
+          import importlib.metadata
+          import json
+          import platform
+          from pathlib import Path
+
+          result = {
+              "python": platform.python_version(),
+              "platform": platform.platform(),
+              "groups": ["dev", "canonicalize-oracle"],
+              "extras": ["mcp"],
+              "packages": sorted(
+                  ({"name": d.metadata["Name"], "version": d.version}
+                   for d in importlib.metadata.distributions()),
+                  key=lambda d: d["name"].lower(),
+              ),
+          }
+          Path("canary-evidence/environment.json").write_text(
+              json.dumps(result, indent=2) + "\n", encoding="utf-8"
+          )
+          PY
+      - name: Require the MCP API selected for this canary
+        shell: bash
+        run: |
+          set -o pipefail
+          uv run --locked python -c "from mcp.server.fastmcp import FastMCP" 2>&1 | tee canary-evidence/mcp-api.txt
+      - name: Run the existing test suite on the selected graph
+        if: ${{ !cancelled() && steps.sync.outcome == 'success' }}
+        shell: bash
+        run: |
+          set -o pipefail
+          uv run --locked pytest -q -ra 2>&1 | tee canary-evidence/pytest.txt
+      - name: Audit the selected runtime and development environment
+        if: ${{ !cancelled() && steps.sync.outcome == 'success' }}
+        run: |
+          uv run --locked --with pip-audit pip-audit --version > canary-evidence/pip-audit-version.txt
+          uv run --locked --with pip-audit pip-audit --format json --output canary-evidence/pip-audit.json
+      - name: Retain diagnostic evidence for 30 days
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: dependency-canary-py313-${{ github.run_id }}-${{ github.run_attempt }}
+          path: canary-evidence/
+          retention-days: 30
+          if-no-files-found: warn
