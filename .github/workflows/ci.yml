@@ -6,12 +6,15 @@ on:
   pull_request:
     branches: [main]
   schedule:
-    # Weekly canary: re-run the suite and the dependency audit against the
-    # latest compatible dependencies even when nothing has been committed.
+    # Recheck the committed lock and current advisories every week.
+    # dependency-canary.yml separately resolves newer allowed versions.
     - cron: "17 6 * * 1"
 
 permissions:
   contents: read
+
+env:
+  UV_PYTHON: "3.13"
 
 jobs:
   test:
@@ -21,20 +24,25 @@ jobs:
       fail-fast: false
       matrix:
         python-version: ["3.11", "3.12", "3.13"]
+    env:
+      UV_PYTHON: ${{ matrix.python-version }}
     steps:
       - uses: actions/checkout@v6
       - name: Set up uv
         uses: astral-sh/setup-uv@v7
         with:
+          version: "0.11.14"
           python-version: ${{ matrix.python-version }}
           enable-cache: true
       - name: Sync dependencies
-        run: uv sync
+        run: uv sync --locked
+      - name: Require the MCP API included in this test environment
+        run: uv run --locked python -c "from mcp.server.fastmcp import FastMCP"
       - name: Run tests
-        run: uv run pytest -q
+        run: uv run --locked pytest -q
       - name: Coverage (3.13 only)
         if: matrix.python-version == '3.13'
-        run: uv run pytest --cov=witseal --cov-report=term-missing
+        run: uv run --locked pytest --cov=witseal --cov-report=term-missing
 
   quality:
     name: Lint, types, vocabulary
@@ -44,18 +52,19 @@ jobs:
       - name: Set up uv
         uses: astral-sh/setup-uv@v7
         with:
+          version: "0.11.14"
           python-version: "3.13"
           enable-cache: true
       - name: Sync dependencies
-        run: uv sync
+        run: uv sync --locked
       - name: Ruff lint
-        run: uv run ruff check .
+        run: uv run --locked ruff check .
       - name: Mypy (strict)
-        run: uv run mypy src
+        run: uv run --locked mypy src
       - name: Vocabulary discipline
-        run: uv run python scripts/style_check.py
+        run: uv run --locked python scripts/style_check.py
       - name: Version consistency
-        run: uv run python scripts/check_version_consistency.py
+        run: uv run --locked python scripts/check_version_consistency.py
 
   audit:
     name: Dependency audit (pip-audit)
@@ -65,12 +74,16 @@ jobs:
       - name: Set up uv
         uses: astral-sh/setup-uv@v7
         with:
+          version: "0.11.14"
           python-version: "3.13"
           enable-cache: true
       - name: Sync dependencies
-        run: uv sync
+        run: uv sync --locked
       - name: pip-audit (runtime + dev dependencies)
-        run: uv run --with pip-audit pip-audit
+        run: |
+          uv --version
+          uv run --locked --with pip-audit pip-audit --version
+          uv run --locked --with pip-audit pip-audit
 
   build:
     name: Build wheel + sdist
@@ -80,6 +93,7 @@ jobs:
       - name: Set up uv
         uses: astral-sh/setup-uv@v7
         with:
+          version: "0.11.14"
           python-version: "3.13"
           enable-cache: true
       - name: Build

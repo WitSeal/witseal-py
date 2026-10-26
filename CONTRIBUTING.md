@@ -35,12 +35,14 @@ features, vendor lock-in, and unreviewed machine-generated PRs.
 ## Development setup
 
 Requires Python 3.11+ and [uv](https://docs.astral.sh/uv/).
+The main CI and dependency canary use uv 0.11.14. Main CI uses the committed
+`uv.lock`.
 
 ```bash
 git clone https://github.com/WitSeal/witseal-py
 cd witseal-py
-uv sync
-uv run pytest
+uv sync --locked
+uv run --locked pytest
 ```
 
 ## Tests, lint, type-check
@@ -55,6 +57,40 @@ uv run pytest
 | `uv run python scripts/style_check.py` | vocabulary discipline (Markdown) |
 
 Tests live in `tests/`, named `test_<module>.py` (pytest conventions).
+
+## Dependency checks
+
+The main CI tests the committed lock on Python 3.11, 3.12 and 3.13. Its weekly
+run repeats that environment and checks current advisories; it does not select
+new dependency versions. A lock that disagrees with project metadata fails
+`uv sync --locked` instead of being silently updated in CI.
+
+The separate **Dependency canary** runs weekly and on manual request, on Python
+3.13 only. It runs `uv lock --upgrade` in a disposable checkout, installs that
+graph with the dev/oracle groups and MCP extra, and runs the existing tests and
+dependency audit. It does not establish compatibility on every Python version
+allowed by the package metadata.
+
+The main test jobs and canary also import the MCP API used by this integration
+explicitly. The optional integration tests may otherwise skip when
+`mcp.server.fastmcp` is
+unavailable, including when an allowed dependency upgrade changes that API.
+That skip must not become a successful compatibility signal for a canary that
+requested MCP. Versions allowed by dependency constraints are candidates for
+testing, not a promise of runtime compatibility.
+
+The canary retains its source identity, resolver version, selected lock,
+installed package versions, test output and audit output as diagnostic artifacts
+for 30 days. Failures remain visible; this scheduled workflow is not a required
+pull-request check. It has read-only repository permissions and does not commit
+its new lock or publish a package. A maintainer reviews any dependency update
+separately and then updates the committed lock through the usual contribution
+process. Keep existing required CI check names when changing workflows.
+
+Both current audit commands inspect a development environment containing MCP;
+their findings are not a base-install-only assessment. A passing canary does not
+resolve findings against the committed lock. Track dependency dispositions
+separately from the scheduling and resolver mechanics.
 
 ## Vocabulary discipline
 
